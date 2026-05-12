@@ -3,7 +3,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
-import ApplicationForm from "./pages/Applicationform";
+import ApplicationForm from "./pages/ApplicationForm";
 
 function App() {
   return (
