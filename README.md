@@ -112,20 +112,31 @@ npm run dev
 
 ---
 
-## ☁️ Deployment (Vercel)
+## ☁️ Deployment (Render)
 
-The codebase is pre-configured for serverless deployment on Vercel.
+This application can be easily deployed using **Render**. You will deploy the backend as a **Web Service** and the three frontends as **Static Sites**.
 
-### Backend Deployment
-1. Import the `/backend` directory to Vercel.
-2. Vercel will automatically detect the `vercel.json` routing configuration and the exported Express app in `index.js`.
-3. Add your `.env` variables to the Vercel project settings.
+### 1. Backend Deployment (Web Service)
+1. In Render, create a new **Web Service** and connect your GitHub repository.
+2. **Root Directory:** `backend`
+3. **Build Command:** `npm install`
+4. **Start Command:** `npm start` (or `node index.js`)
+5. Under **Environment Variables**, add all the variables from your local `.env` file (e.g., `MONGO_URI`, `JWT_SECRET`, Cloudinary keys, Admin credentials).
+6. Deploy the service and copy the generated URL (e.g., `https://recruitment-backend.onrender.com`).
 
-### Frontend Deployment
-1. Import `/frontend`, `/prof-frontend`, and `/admin-frontend` as three separate projects in Vercel.
-2. For each project, Vercel will automatically detect the Vite framework.
-3. In the environment variables for each frontend, add:
+### 2. Frontend Deployments (Static Sites)
+You will repeat this process three times—once for each frontend (`frontend`, `prof-frontend`, `admin-frontend`).
+
+1. In Render, create a new **Static Site** and connect your repository.
+2. **Root Directory:** `frontend` (change to `prof-frontend` or `admin-frontend` respectively).
+3. **Build Command:** `npm install && npm run build`
+4. **Publish Directory:** `dist`
+5. **Environment Variables:** Add the following key to link it to your deployed backend:
    ```env
    VITE_API_URL=https://<your-deployed-backend-url>/api
    ```
-   *(This ensures the frontends dynamically route to the deployed backend instead of localhost).*
+6. **Routing (Important for React Router):** In the Render settings for each Static Site, go to **Redirects/Rewrites** and add a rule to catch all routes to avoid 404s on refresh:
+   - **Source:** `/*`
+   - **Destination:** `/index.html`
+   - **Action:** `Rewrite`
+7. Deploy! Your frontends will now securely talk to your Render backend.

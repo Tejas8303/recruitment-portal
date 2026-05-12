@@ -9,7 +9,6 @@ const adminRoutes = require("./routes/adminRoutes");
 dotenv.config();
 connectDB();
 
-console.log("TEST ENV:", process.env.CLOUDINARY_API_KEY);
 const app = express();
 
 app.use(cors());
