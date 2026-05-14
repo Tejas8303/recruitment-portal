@@ -52,7 +52,7 @@ function ApplicationForm() {
                 data.append(key, files[key]);
             });
 
-            await API.post("/applications", data, {
+            await API.post(`/applications?projectId=${projectId}`, data, {
                 headers: {
                     "Content-Type": "multipart/form-data",
                 },

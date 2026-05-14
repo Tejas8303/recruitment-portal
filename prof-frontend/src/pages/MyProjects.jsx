@@ -47,6 +47,24 @@ function MyProjects() {
     }
   };
 
+  const exportProjectCSV = async (id, projectCode) => {
+    try {
+      const res = await API.get(`/applications/export/csv/${id}`, {
+        responseType: "blob",
+      });
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `${projectCode}_applications.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      console.log(error);
+      alert("CSV export failed");
+    }
+  };
+
   const startEditing = (project) => {
     setEditingProject(project._id);
     setEditTitle(project.projectTitle);
@@ -159,6 +177,12 @@ function MyProjects() {
                           </span>
                         </div>
                         <div className="flex gap-2">
+                          <button 
+                            onClick={() => exportProjectCSV(project._id, project.projectCode)}
+                            className="px-3 py-1 bg-emerald-50 text-emerald-600 rounded-md hover:bg-emerald-100 text-sm font-semibold transition-colors"
+                          >
+                            Export CSV
+                          </button>
                           <button 
                             onClick={() => startEditing(project)}
                             className="px-3 py-1 bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 text-sm font-semibold transition-colors"

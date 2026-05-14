@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+    container_name: recruitment_backend
+    ports:
+      - "5000:5000"
+    env_file:
+      - ./backend/.env
+    # Persist uploaded files across container restarts
+    volumes:
+      - uploads_data:/app/uploads
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: recruitment_frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  admin-frontend:
+    build:
+      context: ./admin-frontend
+    container_name: recruitment_admin_frontend
+    ports:
+      - "3001:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  prof-frontend:
+    build:
+      context: ./prof-frontend
+    container_name: recruitment_prof_frontend
+    ports:
+      - "3002:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+# Named volume so uploads/ persists even if the backend container is recreated
+volumes:
+  uploads_data:

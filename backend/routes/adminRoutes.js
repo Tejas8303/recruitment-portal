@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const adminController = require("../controllers/adminController");
 const { adminAuth } = require("../middleware/adminAuth");
+const { exportApplicationsCSV } = require("../controllers/ApplicationController");
 
 // Apply adminAuth to all routes in this file
 router.use(adminAuth);
@@ -14,6 +15,7 @@ router.put("/professors/:id/block", adminController.toggleProfessorBlock);
 // Projects Management
 router.get("/projects", adminController.getAllProjects);
 router.delete("/projects/:id", adminController.deleteProject);
+router.get("/projects/:projectId/export/csv", exportApplicationsCSV);
 
 // Applications Management
 router.get("/applications", adminController.getAllApplications);

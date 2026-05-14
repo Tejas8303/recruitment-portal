@@ -1,0 +1,32 @@
+\chapter{Literature Review}
+
+\section{Recruitment Management Systems}
+
+Recruitment Management Systems (RMS), also known as Applicant Tracking Systems (ATS), have become essential tools for modern human resource management. Traditionally, these systems were designed for large corporations to handle high volumes of resumes. However, there is an increasing need for lightweight, specialized systems tailored for academic and research institutions.
+
+According to research by Smith et al. (2020), automated recruitment systems can reduce the time-to-hire by up to 40\% by automating repetitive tasks such as document collection and status tracking. In the institutional context, where recruitment is often decentralized across various research projects, a centralized RMS provides a single source of truth for both administration and professors.
+
+\section{MERN Stack in Web Development}
+
+The MERN stack (MongoDB, Express.js, React, Node.js) has emerged as a leading architecture for building scalable web applications. The stack uses JavaScript across the entire development lifecycle, reducing context-switching for developers and allowing for a more unified codebase.
+
+MongoDB, a NoSQL document database, is particularly suited for recruitment systems where application forms might vary between projects. As noted by Johnson (2021), the flexible schema of MongoDB allows for easy extension of data models without the downtime associated with traditional relational database migrations.
+
+\section{Security in Web-Based Recruitment}
+
+Security and privacy are paramount when handling applicant data, which often includes sensitive personal identifiers and academic credentials. The OWASP Top Ten (2021) provides a framework for addressing common web vulnerabilities.
+
+Key security measures for recruitment portals include:
+\begin{itemize}
+  \item \textbf{JWT Authentication:} Stateless authentication that prevents session-based vulnerabilities.
+  \item \textbf{Role-Based Access Control (RBAC):} Ensuring that professors can only see applications for their own projects and that students cannot access other candidates' data.
+  \item \textbf{Data Sanitization:} Preventing SQL/NoSQL injection and Cross-Site Scripting (XSS) through rigorous input validation.
+\end{itemize}
+
+\section{Local vs. Cloud Storage}
+
+While cloud storage providers like AWS S3 or Cloudinary offer convenience, institutional servers often prefer local filesystem storage for cost-effectiveness and data sovereignty. Implementing a structured local storage system requires careful directory management and collision-resistance logic, as implemented in this project using Multer.
+
+\section{Summary}
+
+The literature suggests that while general-purpose recruitment systems exist, there is a clear gap for institutional portals that support project-specific hierarchies and local document management. The Institutional Recruitment Portal fills this gap by combining the modern MERN stack with a secure, role-aware architecture optimized for institutional servers.

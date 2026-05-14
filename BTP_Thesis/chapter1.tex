@@ -1,0 +1,100 @@
+\chapter{Introduction}
+\pagenumbering{arabic}\hspace{3mm}
+
+\section{Background and Motivation}
+
+Academic institutions like IIT Patna frequently undertake research and consultancy projects that require the recruitment of project staff, such as Junior Research Fellows (JRF), Senior Research Fellows (SRF), and project assistants. Traditionally, this recruitment process has been handled through manual or semi-automated methods. Typically, a project advertisement is released, and candidates are asked to send their applications, including resumes and supporting documents, via email or physical post to the concerned principal investigator (Professor).
+
+This traditional approach leads to several inefficiencies. Professors often receive hundreds of emails, making it difficult to track and organize applications for multiple projects simultaneously. There is no centralized system to verify if a candidate has submitted all required documents, and managing the status of each application (e.g., shortlisted, rejected) is a tedious manual task. Furthermore, the lack of a standardized application format makes it challenging to compare candidates efficiently. A purpose-built, secure, and scalable recruitment portal tailored to the institutional context is therefore both timely and necessary.
+
+To address these challenges, the \textbf{Institutional Recruitment Portal} is proposed and developed. This is a MERN-stack-based web application designed to digitize the entire recruitment workflow, from project advertisement to candidate selection. The system leverages role-based access control to ensure that only authorized personnel can manage projects and view sensitive candidate information.
+
+\section{Problem Statement}
+
+The institutional recruitment process currently faces the following operational challenges, which this portal is designed to address:
+
+\begin{enumerate}
+  \item \textbf{Fragmentation of Application Data.} Applications and supporting documents are often scattered across multiple email inboxes or physical folders, making centralized tracking impossible.
+  
+  \item \textbf{Manual Document Verification.} There is no automated way to ensure that applicants have uploaded all mandatory documents (e.g., GATE score, mark sheets) before their application is considered.
+  
+  \item \textbf{Difficulty in Managing Multiple Projects.} Professors handling multiple research projects simultaneously struggle to separate and manage applicant pools for each project efficiently.
+  
+  \item \textbf{Lack of a Standardized Application Flow.} Applicants often submit information in varying formats, making it difficult for professors to extract and compare key data points.
+  
+  \item \textbf{Security and Privacy Concerns.} Handling sensitive personal documents (like ID proofs) via email is less secure than using a dedicated platform with encrypted storage and access control.
+  
+  \item \textbf{Lack of Institutional Oversight.} The administration has no real-time visibility into the recruitment activities across different departments and projects.
+\end{enumerate}
+
+\section{Objectives}
+
+The primary objective of this project is to design, implement, and evaluate a comprehensive web-based recruitment management system. The specific objectives are:
+
+\begin{enumerate}
+  \item Develop a centralized platform for project advertisements and application submissions.
+  
+  \item Implement a secure multi-portal system for Students (Applicants), Professors, and Administrators.
+  
+  \item Design a structured local filesystem storage system for managing large volumes of uploaded documents.
+  
+  \item Enable professors to manage their own projects, view applications in real-time, and update application statuses.
+  
+  \item Provide data export features, including bulk ZIP downloads of documents and CSV exports of application summaries.
+  
+  \item Ensure high security through JWT-based authentication and Role-Based Access Control (RBAC).
+  
+  \item Build a responsive and premium user interface to enhance the user experience for all stakeholders.
+\end{enumerate}
+
+\section{Scope of the Project}
+
+\subsection{In Scope}
+
+The following capabilities are within the scope of the Institutional Recruitment Portal:
+
+\begin{itemize}
+  \item User registration and authentication (Student, Professor, Admin).
+  \item Project creation, editing, and deletion by Professors.
+  \item Application submission with mandatory document uploads.
+  \item Local filesystem storage structured by project code and applicant name.
+  \item Role-based dashboard for all three user roles.
+  \item Status management (Pending, Qualified, Rejected) for applications.
+  \item CSV export of application data for further processing.
+  \item Bulk ZIP download of all documents associated with a project.
+  \item Containerized deployment using Docker and Nginx.
+\end{itemize}
+
+\subsection{Out of Scope}
+
+The following are explicitly excluded from the current version:
+
+\begin{itemize}
+  \item Online interview scheduling or video conferencing integration.
+  \item Automated resume screening using AI/ML.
+  \item Integration with external job boards (e.g., LinkedIn).
+  \item Payment gateway integration for application fees.
+  \item Real-time chat between professors and applicants.
+\end{itemize}
+
+\section{Key Contributions}
+
+The principal contributions of this project are:
+
+\begin{enumerate}
+  \item A fully functional, production-ready MERN stack application that digitizes the entire institutional recruitment lifecycle.
+  
+  \item A robust and structured file management system that handles large-scale document uploads without relying on expensive cloud storage providers.
+  
+  \item A secure, role-aware architecture that ensures the privacy of applicant data and the integrity of the recruitment process.
+  
+  \item A data-driven approach to recruitment, providing tools for easy export and analysis of applicant pools.
+\end{enumerate}
+
+\section{Organisation of The Report}
+
+The remainder of this report is organized as follows.
+In Chapter~2, existing recruitment platforms and the technical foundations of the MERN stack are reviewed.
+In Chapter~3, the system design and architecture are presented, including the three-portal structure and the database schema.
+In Chapter~4, the implementation details, including local storage logic and security measures, are discussed.
+Finally, Chapter~5 concludes the report and suggests future improvements.

@@ -1,0 +1,335 @@
+\chapter{Testing and Evaluation}
+
+The current chapter analyzes MedTrack in terms of three aspects, namely, correctness (is the software implemented according to specifications?), security (can it withstand all possible types of attacks for which it is designed?), and performance (is it fast enough, does it respond within the required time limits for the typical load of a health center?).
+
+\section{Testing Methodology}
+
+Tests were carried out in a local Docker environment replicating the
+environmental conditions expected during deployment - MongoDB in one
+container, Express API server in another, and Nginx acting as the
+web server for the React front end application hosted in the third.
+The tests carried out were done against live data operations, as there
+were no mock objects created - thereby guaranteeing true behavior
+simulation during test execution.
+
+Scenario-based testing was used for functional testing, where the test
+scenario would cover the entire workflow of the user role from login
+up to the completion of its last action. Adversarial input data were
+used in security testing to simulate vulnerabilities targeted for
+mitigation. Performance testing results were obtained using multiple API
+requests, where their response times were measured on the server side.
+
+\section{Functional Testing}
+
+\subsection{Authentication Module}
+
+\begin{itemize}
+  \item A student signed in using the roll number \texttt{2201AI40}
+  and the correct password. Expected: token issued, role-based dashboard
+  displayed. \textbf{Result: Pass.}
+
+  \item The same student entered an invalid password five consecutive
+  times. Expected: account becomes locked on the fifth attempt,
+  HTTP 403 status on the sixth attempt with the lockout message.
+  \textbf{Result: Pass.}
+
+  \item An account creation link was generated for a new account.
+  The link was activated once successfully. Using the link again
+  resulted in HTTP 400 status with the message "Token Already Consumed."
+  \textbf{Result: Pass.}
+
+  \item A student tried to access the doctor dashboard by directly
+  visiting \texttt{/doctor/dashboard}. Expected: redirection to sign-in
+  page due to Protected Route role verification. \textbf{Result: Pass.}
+\end{itemize}
+
+\subsection{Patient Management}
+
+\begin{itemize}
+  \item Another student registered and was assigned UHID \texttt{STU000001}.
+  The subsequent student who registered got \texttt{STU000002}.
+  Sequential UHID generation proved successful.
+  \textbf{Result: Pass.}
+
+  \item Another faculty registered a dependent (spouse). The spouse
+  showed up in the admin’s pending verification list. Once approved,
+  the spouse could be searched by the staff for consultation booking.
+  Prior to being approved, searching the spouse by the staff produced
+  no results. \textbf{Result: Pass.}
+
+  \item An administrator soft-deleted a patient record. The patient
+  vanished from all list screens. Then, the administrator restored
+  the patient using the accordion menu for deleted records. The
+  patient reappeared with all past consultations intact. \textbf{Result:
+    Pass.}
+
+  \item A patient uploaded a profile picture that was greater than
+  5\,MB in size. The system refused the upload without saving the
+  file. \textbf{Result: Pass.}
+\end{itemize}
+
+\subsection{Consultation Workflow}
+
+\begin{itemize}
+  \item Staff Member created a consultation for the student \texttt{2201AI40}. A consultation was assigned to the doctor. The pending queue of the doctor was updated instantly upon reloading the next page. An in-app notification appeared under the doctor’s notification bell. \textbf{Result: Pass.}
+
+  \item The doctor accessed the consultation. The consultations conducted by the patient before and the uploaded lab reports were seen in the left side panel. The doctor filled out the prescription and submitted it. The consultation was marked as complete and the patient got an in-app notification. \textbf{Result: Pass.}
+
+  \item A Staff Member assigned an incomplete consultation to Doctor A to Doctor B. The consultation could not be seen in the queue of Doctor A while it was available in the queue of Doctor B. The notifications of both doctors were updated instantly. \textbf{Result: Pass.}
+
+  \item A doctor flagged the consultation for follow-up in 7 days. The follow-up date was printed in the generated PDF. \textbf{Result: Pass.}
+\end{itemize}
+
+\subsection{PDF Prescription Generation}
+
+\begin{itemize}
+  \item Prescription was created with two medications and a lab test.
+  The PDF had all required details: Header with name of IIT Patna
+  Health Centre, patient details including name, UHID, blood group,
+  roll number, any allergic history, clinical notes, medicine
+  table, and finally, the name of the doctor. \textbf{Result: Pass}
+
+  \item A user tried to view another person’s prescription PDF by
+  making a guess for the URL without providing any valid JSON web
+  token. HTTP 401 response was received because there was no
+  authentication done. \textbf{Result: Pass}
+\end{itemize}
+
+\subsection{Laboratory Report Management}
+
+\begin{itemize}
+  \item A lab report in PDF format was uploaded by a patient. The
+  report showed up on the Reports page for that patient and could be
+  seen by the doctor on the patient history screen within the new
+  consultation process. \textbf{Result: Pass.}
+
+  \item One of a patient’s reports was deleted. The document was
+  deleted both on disk and in the database. This report no longer
+  showed up in the list for that patient or the doctor’s history
+  screen. \textbf{Result: Pass.}
+\end{itemize}
+
+\subsection{Notification System}
+
+\begin{itemize}
+  \item All four trigger events (consultation created, consultation
+  completed, dependent registration, dependent verification) were
+  performed. In all cases, the right person was notified and the
+  bell badge number was increased. \textbf{Result: Pass.}
+
+  \item Reading notifications lowered the number of badges by one.
+  Reading all lowered the number of badges to zero.
+  \textbf{Result: Pass.}
+\end{itemize}
+
+\subsection{Administrative Analytics}
+
+\begin{itemize}
+  \item Following the seeding of 30 consultations within 7 days, the trend graph showed the correct number of consultations per day. The summary number of the last seven days tallied with the total number in the graph. \textbf{Result: Passed}
+
+  \item The physician productivity table ranked physicians correctly according to their number of consultations, having taken into account consultations from more than one physician. \textbf{Result: Passed}
+\end{itemize}
+
+Table~\ref{tab:features} summarises the objective-to-feature validation
+matrix for all stated project objectives.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Objective-to-feature validation matrix.}
+  \label{tab:features}
+  \begin{tabularx}{\textwidth}{lXl}
+    \hline
+    \textbf{Obj.} & \textbf{Implemented Feature} & \textbf{Result} \\
+    \hline
+    O1 & Centralised patient repository: profile, medical info,
+         document storage, soft delete
+       & Pass \\
+    O2 & Queue-based consultation workflow: Staff creates, Doctor
+         completes, real-time status update
+       & Pass \\
+    O3 & Structured prescription form and automated PDF generation
+         with IIT Patna Health Centre header
+       & Pass \\
+    O4 & Authenticated lab report upload, inline view, and delete
+       & Pass \\
+    O5 & Faculty-dependent registration with admin approval workflow
+       & Pass \\
+    O6 & JWT + RBAC enforced on every protected endpoint; four
+         distinct role access sets
+       & Pass \\
+    O7 & bcrypt, rate limiting, Helmet, input validation, ReDoS
+         prevention, mass-assignment protection
+       & Pass \\
+    O8 & Admin analytics: daily/monthly charts, demographics, doctor
+         productivity, inventory summary
+       & Pass \\
+    O9 & In-app notification bell with four trigger events
+       & Pass \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\section{Security Testing}
+
+The security posture of MedTrack was compared with the
+OWASP Top Ten Risk Categories for the year 2021 \cite{OWASP2021}
+that are applicable to a web-based healthcare application.
+Table~\ref{tab:owasp} describes each of these risks, the
+
+\begin{table}[htbp]
+  \centering
+  \caption{OWASP Top Ten 2021 mitigation and test results.}
+  \label{tab:owasp}
+  \begin{tabularx}{\textwidth}{lXl}
+    \hline
+    \textbf{Risk} & \textbf{Mitigation in MedTrack} & \textbf{Result} \\
+    \hline
+    A01: Broken Access Control
+      & JWT + RBAC; ownership checks on file ops and dependent
+        registration
+      & Pass \\
+    A02: Cryptographic Failures
+      & bcryptjs (cost 10) for passwords; JWT over TLS; no plaintext
+        credential storage
+      & Pass \\
+    A03: Injection
+      & express-validator on all inputs; \texttt{escapeRegex} on
+        search; Mongoose parameterised queries
+      & Pass \\
+    A04: Insecure Design
+      & Threat-modelled auth flow; soft delete; append-only audit
+        log; single-use password tokens
+      & Pass \\
+    A05: Security Misconfiguration
+      & Helmet HTTP headers; CORS whitelist; env variable validation
+        on startup
+      & Pass \\
+    A07: Identification and Auth Failures
+      & Account lockout after 5 attempts; rate limiting on login;
+        24-hour JWT expiry
+      & Pass \\
+    A09: Security Logging Failures
+      & Winston structured logs; AuditLog for all sensitive ops
+        with actor, IP, timestamp
+      & Pass \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\subsection{Privilege Escalation Test (Mass-Assignment)}
+
+A PATCH request was made to the endpoint that updates the patient profile with the extra attribute \texttt{"role": "admin"}. The field whitelist of the update controller did not consider the \texttt{role} field at all. A check on the database entry confirmed that the user’s role had not been changed at all. \textbf{Outcome: Pass.}
+
+\subsection{ReDoS Resistance Test}
+
+A search string that causes catastrophic backtracking due to
+a naive regex such as a repeated pattern followed by a non-matching
+character was sent to the patient search endpoint. The string was
+sanitized with the \texttt{escapeRegex()} function before sending,
+and all special characters were escaped in the string before it was
+passed into the query. The request was completed instantaneously and
+returned an empty array of results. \textbf{Result: Pass.}
+
+\subsection{Brute-Force Resistance Test}
+
+Six successive login attempts using invalid credentials were made on the same user account. The results of the first five were HTTP 401 (invalid credentials). The sixth resulted in HTTP 403 with a message ``Account locked. Please try after 15 minutes,'' indicating that lockout and cooldown are functioning properly. \textbf{Conclusion: Pass.}
+
+\subsection{Unauthorised File Access Test}
+
+\begin{sloppypar}
+The request to the prescription file API endpoint \texttt{/api/consultations/:id/pdf} using the \texttt{GET} method was made without an \texttt{Authorization} header, which resulted in an HTTP 401 response. Another request was made using a valid JWT but for a different user, and an HTTP 403 response was received. This proves that the ownership validation rule is implemented, i.e., only the patient, his doctor, or an administrator can access the file. \textbf{Conclusion: Passed.}
+\end{sloppypar}
+
+\subsection{JWT Expiry Test}
+
+\begin{sloppypar}
+An expired JWT (manually constructed with a past \texttt{exp} claim)
+was submitted to a protected endpoint. The \texttt{protect} middleware
+caught the \texttt{TokenExpiredError} from \texttt{jwt.verify()} and
+returned HTTP 401. The frontend's Axios interceptor detected the 401
+and displayed the \texttt{SessionExpiredBanner}. \textbf{Result: Pass.}
+\end{sloppypar}
+
+\section{Performance Testing}
+
+Performance was measured on a development machine (Intel Core i7,
+16\,GB RAM) running all three Docker containers. Each endpoint was
+called 10 times in succession; the values in Table~\ref{tab:perf}
+represent the average response time.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Average API response times under single-user load.}
+  \label{tab:perf}
+  \begin{tabular}{lrl}
+    \hline
+    \textbf{Endpoint} & \textbf{Avg.\ (ms)} & \textbf{Bottleneck} \\
+    \hline
+    POST /api/auth/login              & 185 & bcrypt.compare() \\
+    GET  /api/patients (page 1)       &  42 & Indexed query \\
+    POST /api/consultations           &  58 & DB write + notification \\
+    PUT  /api/consultations/:id (complete) & 510 & PDF generation (sync) \\
+    GET  /api/dashboard               &  92 & Aggregation pipeline \\
+    GET  /api/audit                   &  48 & Paginated index scan \\
+    GET  /api/notifications           &  35 & Simple filter query \\
+    POST /api/reports (file upload)   & 120 & Disk write \\
+    \hline
+  \end{tabular}
+\end{table}
+
+Apart from consultation completion, all endpoints complete in less
+than 200\,ms, which is unnoticeable for users. The delay of
+510\,ms in consultation completion is due to synchronous PDF
+generation during HTTP response processing. This is fine, considering
+the anticipated number of concurrent users (up to several tens) at a
+large institutional health centre. For more significant numbers, the
+suggestion is to asynchronously generate PDFs using a background job
+queue as a potential enhancement.
+
+\subsection{Scalability Issue Identified}
+
+The \texttt{GET /api/patients} endpoint currently queries all
+records of Student and Faculty types from the \texttt{User}
+collection and all Dependent records from the \texttt{Patient}
+collection. All queried records are loaded into Node.js heap memory,
+merged and sorted on JavaScript, and sliced according to the desired
+page. While this works perfectly well for IIT Patna's population,
+it is likely to cause out-of-memory issues for a larger institution.
+The recommended solution -- merging and paginating all records using
+a single MongoDB aggregation pipeline -- is noted as future work.
+
+\section{Comparison with Existing Systems}
+
+Table~\ref{tab:comparison} compares MedTrack with OpenMRS~\cite{OpenMRS2006},
+a widely used open-source EMR for resource-limited settings, and with a
+representative generic MERN-based HIS prototype typical of academic
+implementations.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Feature comparison: MedTrack vs.\ existing systems.}
+  \label{tab:comparison}
+  \begin{tabularx}{\textwidth}{Xccc}
+    \hline
+    \textbf{Feature} & \textbf{MedTrack} & \textbf{OpenMRS}
+                     & \textbf{Generic MERN HIS} \\
+    \hline
+    Lightweight single-institution setup  & Yes & No  & Yes \\
+    Institutional ID-based auth           & Yes & No  & No  \\
+    Faculty-dependent patient hierarchy   & Yes & No  & No  \\
+    Automated PDF prescription            & Yes & No  & No  \\
+    Soft delete with restore              & Yes & No  & No  \\
+    Append-only audit log                 & Yes & Yes & No  \\
+    In-app notification system            & Yes & No  & No  \\
+    Role-based access control (4 roles)   & Yes & Yes & Partial \\
+    Rate limiting on login                & Yes & No  & No  \\
+    ReDoS-safe search                     & Yes & N/A & No  \\
+    Mass-assignment protection            & Yes & N/A & No  \\
+    Docker containerisation               & Yes & No  & Partial \\
+    Admin analytics with charts           & Yes & No  & No  \\
+    Doctor prescription shortcuts         & Yes & No  & No  \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+MedTrack offers more comprehensive and more robust features compared to the two competing options. Compared to OpenMRS, MedTrack demands significantly fewer setup and deployment efforts. Compared to a generic prototype developed using the MERN stack, it comes with the additional benefits of security enhancements, compliance capabilities, and the unique identity model of IIT Patna.

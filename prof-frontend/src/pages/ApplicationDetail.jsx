@@ -121,6 +121,43 @@ function ApplicationDetail() {
               </div>
             </div>
 
+            {/* Uploaded Documents */}
+            {app.documents && Object.keys(app.documents).length > 0 && (
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div className="p-6 border-b border-slate-100 bg-slate-50/50">
+                  <h3 className="text-lg font-bold text-slate-800">Uploaded Documents</h3>
+                </div>
+                <div className="p-6">
+                  <ul className="space-y-3">
+                    {Object.entries(app.documents).map(([docName, filePath]) => {
+                      const backendBase = (import.meta.env.VITE_API_URL || "http://localhost:5000/api").replace(/\/api$/, "");
+                      const fullUrl = backendBase + filePath;
+                      return (
+                        <li key={docName} className="flex items-center gap-3">
+                          <span className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                            </svg>
+                          </span>
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-slate-600 capitalize">{docName.replace(/_/g, " ")}</p>
+                            <a
+                              href={fullUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-sm text-emerald-600 hover:text-emerald-700 hover:underline truncate block"
+                            >
+                              View / Download
+                            </a>
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              </div>
+            )}
+
           </div>
         </main>
       </div>

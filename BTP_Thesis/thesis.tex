@@ -1,0 +1,91 @@
+\documentclass {CSEThesis}
+% Standard packages
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{epstopdf}
+\usepackage{setspace}
+\usepackage{multicol}
+\usepackage{color}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{multirow}
+\usepackage{enumitem}
+\usepackage{listings}
+\lstdefinelanguage{JavaScript}{
+  keywords={break,case,catch,continue,debugger,default,delete,do,else,
+            finally,for,function,if,in,instanceof,new,return,switch,
+            this,throw,try,typeof,var,void,while,with,
+            const,let,class,export,import,async,await,of,from},
+  morecomment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  morestring=[b]',
+  morestring=[b]",
+  sensitive=true
+}
+\usepackage{float}
+\usepackage[hidelinks]{hyperref}
+\usepackage{url}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning, fit, backgrounds}
+%===== page layout
+% Define the side margins for a right-side page
+%\insidemargin = 1.3in \outsidemargin = 0.9in
+% Above margin is space above the header
+% Below margin is space below footer
+%\abovemargin = 1.5in \belowmargin = 0.05in
+
+
+\btptitle = {Institutional Recruitment Portal: A Secure and Scalable MERN Stack Platform for Streamlining Project Hiring} % { and } are needed around your name
+\name = {Tejas Kumar}          % and other feilds. don't remove.
+\rollno = {2201MC42} \email = {2201mc42_tejas@iitp.ac.in} 
+\guide = {Dr. Rahul Kumar Singh}
+\coguide = {Dr. Mayank Agarwal}
+
+
+\begin{document}
+
+\include{title}
+\cleardoublepage
+\include{certificate}
+\cleardoublepage
+\include{acknowledgement}
+\cleardoublepage
+\include{abstract}
+\cleardoublepage
+\tableofcontents
+\cleardoublepage
+\addcontentsline{toc}{chapter}{List of Figures}
+\listoffigures
+\cleardoublepage
+\addcontentsline{toc}{chapter}{List of Tables}
+\listoftables
+\cleardoublepage
+\pagenumbering{arabic}
+\def\headrulehook{\color{black}}      % Color the header rule
+
+%========== Chapters
+\typeout{}
+\include{chapter1}
+\cleardoublepage
+\typeout{}
+\include{chapter2}
+\cleardoublepage
+\typeout{}
+\include{chapter3}
+\cleardoublepage
+\typeout{}
+\include{chapter4}
+\cleardoublepage
+\typeout{}
+% \include{chapter5}
+% \cleardoublepage
+% \typeout{}
+\include{futurework}
+\typeout{}
+
+\bibliography{btp}
+\bibliographystyle{ieeetr}
+\end{document}

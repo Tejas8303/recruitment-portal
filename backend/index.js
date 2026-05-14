@@ -1,6 +1,7 @@
 const dotenv = require("dotenv");
 const express = require("express");
 const cors = require("cors");
+const path = require("path");
 const connectDB = require("./config/db");
 const projectRoutes = require("./routes/ProjectRoutes");
 const applicationRoutes = require("./routes/applicationRoutes");
@@ -13,6 +14,10 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+
+// Serve uploaded files as static assets
+// Files are accessible at: http://server:5000/uploads/<projectCode>/<folder>/<file>
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/projects", projectRoutes);

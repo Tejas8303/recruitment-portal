@@ -2,6 +2,24 @@ const Professor = require("../models/Professor");
 const Project = require("../models/Project");
 const Application = require("../models/Application");
 const bcrypt = require("bcryptjs");
+const fs = require("fs");
+const path = require("path");
+
+// Helper: delete all uploaded files for an application from disk
+function deleteApplicationFiles(application) {
+  const documents = application.documents || {};
+  for (const filePath of Object.values(documents)) {
+    if (!filePath) continue;
+    try {
+      const absolutePath = path.join(__dirname, "..", filePath);
+      if (fs.existsSync(absolutePath)) {
+        fs.unlinkSync(absolutePath);
+      }
+    } catch (err) {
+      console.error("Failed to delete file:", filePath, err.message);
+    }
+  }
+}
 
 // CREATE PROFESSOR
 exports.createProfessor = async (req, res) => {
@@ -69,18 +87,23 @@ exports.getAllProjects = async (req, res) => {
   }
 };
 
-// DELETE PROJECT
+// DELETE PROJECT (ADMIN — cascade: applications + uploaded files)
 exports.deleteProject = async (req, res) => {
   try {
     const { id } = req.params;
     const project = await Project.findByIdAndDelete(id);
     if (!project) return res.status(404).json({ message: "Project not found" });
 
-    // Optionally delete all applications associated with this project
+    // Delete uploaded files from disk, then remove application records
+    const applications = await Application.find({ project: id });
+    for (const app of applications) {
+      deleteApplicationFiles(app);
+    }
     await Application.deleteMany({ project: id });
 
-    res.json({ message: "Project deleted successfully" });
+    res.json({ message: "Project and all related applications deleted successfully" });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ message: "Server error" });
   }
 };

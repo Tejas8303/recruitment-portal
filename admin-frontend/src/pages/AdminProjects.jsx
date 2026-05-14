@@ -31,6 +31,24 @@ function AdminProjects() {
     }
   };
 
+  const exportProjectCSV = async (id, projectCode) => {
+    try {
+      const res = await API.get(`/admin/projects/${id}/export/csv`, {
+        responseType: "blob",
+      });
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `${projectCode}_applications.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      console.log(error);
+      alert("CSV export failed");
+    }
+  };
+
   return (
     <div className="p-8">
       <h1 className="text-3xl font-bold text-slate-800 mb-8">All Projects Overview</h1>
@@ -62,12 +80,20 @@ function AdminProjects() {
                     </td>
                     <td className="py-3 text-sm">{new Date(project.deadline).toLocaleDateString()}</td>
                     <td className="py-3">
-                      <button
-                        onClick={() => handleDelete(project._id)}
-                        className="px-3 py-1 bg-rose-100 text-rose-600 rounded-md hover:bg-rose-200 text-sm font-semibold transition-colors"
-                      >
-                        Delete
-                      </button>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => exportProjectCSV(project._id, project.projectCode)}
+                          className="px-3 py-1 bg-emerald-50 text-emerald-600 rounded-md hover:bg-emerald-100 text-sm font-semibold transition-colors"
+                        >
+                          Export CSV
+                        </button>
+                        <button
+                          onClick={() => handleDelete(project._id)}
+                          className="px-3 py-1 bg-rose-100 text-rose-600 rounded-md hover:bg-rose-200 text-sm font-semibold transition-colors"
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
