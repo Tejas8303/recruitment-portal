@@ -130,7 +130,7 @@ function AdminDashboard() {
             <button 
               type="button" 
               onClick={handleDownloadSampleCSV} 
-              className="btn-secondary w-full mb-4 text-sm py-2"
+              className="btn-secondary w-full mb-4 text-sm py-2 border border-gray-400 rounded-lg "
             >
               Download Sample CSV
             </button>
