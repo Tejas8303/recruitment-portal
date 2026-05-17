@@ -4,6 +4,7 @@ const Application = require("../models/Application");
 const bcrypt = require("bcryptjs");
 const fs = require("fs");
 const path = require("path");
+const csv = require("csv-parser");
 
 // Helper: delete all uploaded files for an application from disk
 function deleteApplicationFiles(application) {
@@ -24,7 +25,7 @@ function deleteApplicationFiles(application) {
 // CREATE PROFESSOR
 exports.createProfessor = async (req, res) => {
   try {
-    const { name, email, password, department, designation, profileImage } = req.body;
+    const { name, email, password } = req.body;
 
     const existingProfessor = await Professor.findOne({ email });
     if (existingProfessor) {
@@ -36,16 +37,72 @@ exports.createProfessor = async (req, res) => {
     const professor = await Professor.create({
       name,
       email,
-      password: hashedPassword,
-      department,
-      designation,
-      profileImage
+      password: hashedPassword
     });
 
     res.status(201).json({ message: "Professor created successfully", professor });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
+};
+
+// BULK UPLOAD PROFESSORS
+exports.bulkUploadProfessors = async (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ message: "Please upload a CSV file" });
+  }
+
+  const results = [];
+  let total = 0;
+  let created = 0;
+  let duplicates = 0;
+  let failed = 0;
+
+  const { Readable } = require("stream");
+  const stream = Readable.from(req.file.buffer);
+
+  stream
+    .pipe(csv())
+    .on("data", (data) => results.push(data))
+    .on("end", async () => {
+      total = results.length;
+      
+      for (const row of results) {
+        try {
+          const { name, email, password } = row;
+          if (!name || !email || !password) {
+            failed++;
+            continue;
+          }
+
+          const existingProfessor = await Professor.findOne({ email });
+          if (existingProfessor) {
+            duplicates++;
+            continue;
+          }
+
+          const hashedPassword = await bcrypt.hash(password, 10);
+          await Professor.create({
+            name,
+            email,
+            password: hashedPassword
+          });
+          created++;
+        } catch (error) {
+          failed++;
+        }
+      }
+
+      res.status(200).json({
+        total,
+        created,
+        duplicates,
+        failed
+      });
+    })
+    .on("error", (error) => {
+      res.status(500).json({ message: "Error parsing CSV", error: error.message });
+    });
 };
 
 // GET ALL PROFESSORS
@@ -73,6 +130,34 @@ exports.toggleProfessorBlock = async (req, res) => {
 
     res.json({ message: `Professor ${professor.isBlocked ? "blocked" : "unblocked"} successfully`, professor });
   } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// DELETE PROFESSOR
+exports.deleteProfessor = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const professor = await Professor.findByIdAndDelete(id);
+    if (!professor) {
+      return res.status(404).json({ message: "Professor not found" });
+    }
+
+    // Cascade delete: find all projects by this professor
+    const projects = await Project.find({ professor: id });
+    for (const project of projects) {
+      // Delete uploaded files for applications in this project
+      const applications = await Application.find({ project: project._id });
+      for (const app of applications) {
+        deleteApplicationFiles(app);
+      }
+      await Application.deleteMany({ project: project._id });
+      await Project.findByIdAndDelete(project._id);
+    }
+
+    res.json({ message: "Professor account and related data deleted successfully" });
+  } catch (error) {
+    console.error(error);
     res.status(500).json({ message: "Server error" });
   }
 };
