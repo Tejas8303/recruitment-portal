@@ -4,6 +4,14 @@ A comprehensive, role-based MERN stack application designed to streamline the re
 
 ---
 
+## 🌐 Live Links
+
+- **Student Portal:** [https://recruitment-portal-frontend-95iq.onrender.com](https://recruitment-portal-frontend-95iq.onrender.com)
+- **Professor Portal:** [https://recruitment-portal-prof.onrender.com](https://recruitment-portal-prof.onrender.com)
+- **Super Admin Portal:** [https://recruitment-portal-1-c7lh.onrender.com/](https://recruitment-portal-1-c7lh.onrender.com/)
+
+---
+
 ## 🌟 Features
 
 ### 🧑‍🎓 Student Portal (`/frontend`)

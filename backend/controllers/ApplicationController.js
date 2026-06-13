@@ -4,6 +4,7 @@ const fs = require("fs");
 const path = require("path");
 const { Parser } = require("json2csv");
 const archiver = require("archiver");
+const PDFDocument = require("pdfkit");
 
 // SUBMIT APPLICATION (STUDENT)
 exports.submitApplication = async (req, res) => {
@@ -39,7 +40,7 @@ exports.submitApplication = async (req, res) => {
       });
     }
 
-    await Application.create({
+    const newApp = await Application.create({
       student: req.user.id,
       professor: project.professor,
       project: projectId,
@@ -50,7 +51,10 @@ exports.submitApplication = async (req, res) => {
       status: "Pending",
     });
 
-    res.status(201).json({ message: "Application submitted successfully" });
+    res.status(201).json({ 
+      message: "Application submitted successfully", 
+      applicationId: newApp._id 
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });
@@ -139,9 +143,9 @@ exports.exportApplicationsCSV = async (req, res) => {
 // GET STUDENT'S APPLICATIONS
 exports.getMyApplications = async (req, res) => {
   try {
-    const applications = await Application.find({ student: req.user.id }).select(
-      "project status"
-    );
+    const applications = await Application.find({ student: req.user.id })
+      .populate("project", "projectCode projectTitle deadline")
+      .populate("student", "name email");
     res.json(applications);
   } catch (error) {
     res.status(500).json({ message: "Server error" });
@@ -222,5 +226,83 @@ exports.downloadAllProjects = async (req, res) => {
   } catch (error) {
     console.error("ZIP ERROR:", error);
     res.status(500).json({ message: "ZIP download failed" });
+  }
+};
+
+// DOWNLOAD RECEIPT PDF (STUDENT)
+exports.downloadReceiptPDF = async (req, res) => {
+  try {
+    const app = await Application.findById(req.params.id)
+      .populate("project")
+      .populate("student");
+
+    if (!app) {
+      return res.status(404).json({ message: "Application not found" });
+    }
+
+    // Verify user owns this application
+    if (app.student._id.toString() !== req.user.id) {
+      return res.status(403).json({ message: "Unauthorized access to receipt" });
+    }
+
+    const doc = new PDFDocument({ margin: 50 });
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=receipt_${app.project?.projectCode || "app"}_${app.serialNumber || "1"}.pdf`
+    );
+
+    doc.pipe(res);
+
+    // Design styling: Outer frame
+    doc.rect(20, 20, 572, 752).strokeColor("#e2e8f0").lineWidth(2).stroke();
+
+    // Top Brand Accent line
+    doc.rect(20, 20, 572, 10).fillColor("#4f46e5").fill();
+
+    doc.moveDown(3);
+
+    // Header
+    doc.fontSize(24).fillColor("#1e293b").font("Helvetica-Bold").text("Application Receipt", { align: "center" });
+    doc.moveDown(0.3);
+    doc.fontSize(10).fillColor("#64748b").font("Helvetica").text("Institutional Recruitment Portal Acknowledgement", { align: "center" });
+    doc.moveDown(2);
+
+    // Divider Line
+    doc.moveTo(40, doc.y).lineTo(572 - 40, doc.y).strokeColor("#cbd5e1").lineWidth(1).stroke();
+    doc.moveDown(2);
+
+    // Helper to draw label-value rows
+    const drawRow = (label, value) => {
+      const currentY = doc.y;
+      doc.fontSize(11).fillColor("#475569").font("Helvetica-Bold").text(label, 50, currentY);
+      doc.fontSize(11).fillColor("#0f172a").font("Helvetica").text(value, 200, currentY, { width: 350 });
+      doc.moveDown(1.5);
+    };
+
+    const appFormattedId = `${app.project?.projectCode || "N/A"}-${String(app.serialNumber || 1).padStart(3, "0")}`;
+
+    drawRow("Application ID:", appFormattedId);
+    drawRow("Candidate Name:", app.applicantName || "N/A");
+    drawRow("Candidate Email:", app.student?.email || "N/A");
+    drawRow("Project Code:", app.project?.projectCode || "N/A");
+    drawRow("Project Title:", app.project?.projectTitle || "N/A");
+    drawRow("Submission Time:", new Date(app.submittedAt || app.createdAt).toLocaleString());
+    drawRow("Current Status:", app.status || "Pending");
+
+    doc.moveDown(3);
+    doc.moveTo(40, doc.y).lineTo(572 - 40, doc.y).strokeColor("#cbd5e1").lineWidth(1).stroke();
+    doc.moveDown(3);
+
+    // Footer Info
+    doc.fontSize(9).fillColor("#94a3b8").text("This document serves as proof of your application submission.", { align: "center" });
+    doc.moveDown(0.5);
+    doc.fontSize(9).fillColor("#cbd5e1").text("Recruitment Portal System Generated - No signature required.", { align: "center" });
+
+    doc.end();
+  } catch (error) {
+    console.error("PDF generation failed:", error);
+    res.status(500).json({ message: "Failed to generate receipt PDF" });
   }
 };

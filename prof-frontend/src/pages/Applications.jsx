@@ -5,23 +5,51 @@ import Sidebar from "../components/Sidebar";
 
 function Applications() {
   const [apps, setApps] = useState([]);
+  const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("All");
+  const [projectFilter, setProjectFilter] = useState("All");
 
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchApps = async () => {
+    const fetchAppsAndProjects = async () => {
       try {
-        const res = await API.get("/applications");
-        setApps(res.data);
+        const [appsRes, projRes] = await Promise.all([
+          API.get("/applications"),
+          API.get("/projects/professor")
+        ]);
+        setApps(appsRes.data);
+        setProjects(projRes.data);
       } catch (err) {
-        alert("Failed to load applications");
+        alert("Failed to load applications or projects");
       } finally {
         setLoading(false);
       }
     };
-    fetchApps();
+    fetchAppsAndProjects();
   }, []);
+
+  const filteredApps = apps.filter((a) => {
+    const name = (a.applicantName || "").toLowerCase();
+    const email = (a.student?.email || "").toLowerCase();
+    const appDbId = (a._id || "").toLowerCase();
+    const formattedId = `${a.project?.projectCode || ""}-${a.serialNumber || ""}`.toLowerCase();
+    const q = searchQuery.toLowerCase().trim();
+
+    const matchesSearch =
+      !q ||
+      name.includes(q) ||
+      email.includes(q) ||
+      appDbId.includes(q) ||
+      formattedId.includes(q);
+
+    const matchesStatus = statusFilter === "All" || a.status === statusFilter;
+    const matchesProject = projectFilter === "All" || a.project?._id === projectFilter;
+
+    return matchesSearch && matchesStatus && matchesProject;
+  });
 
   const downloadAll = async () => {
     try {
@@ -118,6 +146,50 @@ function Applications() {
               </div>
             </div>
 
+            {/* Search & Filters */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-200 mb-8">
+              <div>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Search Candidates</label>
+                <input
+                  type="text"
+                  placeholder="Search by Name, Email, or App ID..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all placeholder-slate-400"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Filter by Status</label>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
+                >
+                  <option value="All">All Statuses</option>
+                  <option value="Pending">Pending</option>
+                  <option value="Qualified">Qualified</option>
+                  <option value="Rejected">Rejected</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Filter by Project</label>
+                <select
+                  value={projectFilter}
+                  onChange={(e) => setProjectFilter(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
+                >
+                  <option value="All">All Projects</option>
+                  {projects.map((p) => (
+                    <option key={p._id} value={p._id}>
+                      {p.projectCode} - {p.projectTitle}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
             {/* Table */}
             <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
               {loading ? (
@@ -139,63 +211,69 @@ function Applications() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
-                      {apps.length === 0 ? (
+                      {filteredApps.length === 0 ? (
                         <tr>
                           <td colSpan="6" className="px-6 py-12 text-center text-slate-500">
-                            No applications found.
+                            No applications found matching the search/filters.
                           </td>
                         </tr>
                       ) : (
-                        apps.map((a) => (
-                          <tr key={a._id} className="hover:bg-slate-50/50 transition-colors">
-                            <td className="px-6 py-4">
-                              <div className="font-semibold text-slate-800">{a?.student?.name || "Unknown"}</div>
-                              <div className="text-sm text-slate-500">{a?.student?.email || "No Email"}</div>
-                            </td>
+                        filteredApps.map((a) => {
+                          const formattedId = `${a.project?.projectCode || "N/A"}-${String(a.serialNumber || 1).padStart(3, '0')}`;
+                          return (
+                            <tr key={a._id} className="hover:bg-slate-50/50 transition-colors">
+                              <td className="px-6 py-4">
+                                <div className="font-semibold text-slate-800">{a?.applicantName || "Unknown"}</div>
+                                <div className="text-sm text-slate-500 flex flex-col">
+                                  <span>{a?.student?.email || "No Email"}</span>
+                                  <span className="text-xs text-slate-400 mt-0.5">ID: {formattedId}</span>
+                                </div>
+                              </td>
 
-                            <td className="px-6 py-4">
-                              <div className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">
-                                {a?.project?.projectCode || "N/A"}
-                              </div>
-                            </td>
+                              <td className="px-6 py-4">
+                                <div className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">
+                                  {a?.project?.projectCode || "N/A"}
+                                </div>
+                              </td>
 
-                            <td className="px-6 py-4 text-sm text-slate-500">
-                              {a?.createdAt ? new Date(a.createdAt).toLocaleDateString() : "Unknown"}
-                            </td>
+                              <td className="px-6 py-4 text-sm text-slate-500">
+                                {a?.createdAt ? new Date(a.createdAt).toLocaleDateString() : "Unknown"}
+                              </td>
 
-                            <td className="px-6 py-4">
-                              <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border ${a.status === "Qualified"
-                                ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                                : a.status === "Rejected"
-                                  ? "bg-rose-50 text-rose-700 border-rose-200"
-                                  : "bg-amber-50 text-amber-700 border-amber-200"
-                                }`}>
-                                {a.status || "Pending"}
-                              </span>
-                            </td>
+                              <td className="px-6 py-4">
+                                <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border ${a.status === "Qualified"
+                                  ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                  : a.status === "Rejected"
+                                    ? "bg-rose-50 text-rose-700 border-rose-200"
+                                    : "bg-amber-50 text-amber-700 border-amber-200"
+                                  }`}>
+                                  {a.status || "Pending"}
+                                </span>
+                              </td>
 
-                            <td className="px-6 py-4">
-                              <select
-                                value={a.status || "Pending"}
-                                onChange={(e) => updateStatus(a._id, e.target.value)}
-                                className="block py-1.5 px-1.5 text-sm font-medium border-slate-300 rounded-lg shadow-sm focus:border-emerald-500 focus:ring-emerald-500 bg-white"
-                              >
-                                <option value="Pending">Pending</option>
-                                <option value="Qualified">Qualified</option>
-                                <option value="Rejected">Rejected</option>
-                              </select>
-                            </td>
+                              <td className="px-6 py-4">
+                                <select
+                                  value={a.status || "Pending"}
+                                  onChange={(e) => updateStatus(a._id, e.target.value)}
+                                  className="block py-1.5 px-1.5 text-sm font-medium border-slate-300 rounded-lg shadow-sm focus:border-emerald-500 focus:ring-emerald-500 bg-white cursor-pointer"
+                                >
+                                  <option value="Pending">Pending</option>
+                                  <option value="Qualified">Qualified</option>
+                                  <option value="Rejected">Rejected</option>
+                                </select>
+                              </td>
 
-                            <td className="px-6 py-4 text-right text-sm font-medium">
-                              <button
-                                onClick={() => navigate(`/applications/${a._id}`)}
-                                className="text-emerald-600 hover:text-emerald-900 hover:underline transition-colors font-semibold"
-                              >
-                                View Profile
-                              </button>
-                            </td>
-                          </tr>
-                        ))
+                              <td className="px-6 py-4 text-right text-sm font-medium">
+                                <button
+                                  onClick={() => navigate(`/applications/${a._id}`)}
+                                  className="text-emerald-600 hover:text-emerald-900 hover:underline transition-colors font-semibold"
+                                >
+                                  View Profile
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })
                       )}
                     </tbody>
                   </table>

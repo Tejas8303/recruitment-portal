@@ -8,6 +8,7 @@ const {
   getMyApplications,
   getSingleApplication,
   updateStatus,
+  downloadReceiptPDF,
 } = require("../controllers/ApplicationController");
 
 const { userAuth } = require("../middleware/userAuth");
@@ -21,6 +22,7 @@ const router = express.Router();
 // resolveProject runs first (uses ?projectId query param) to build folder path before Multer
 router.post("/", userAuth, resolveProject, upload.any(), submitApplication);
 router.get("/my", userAuth, getMyApplications);
+router.get("/:id/receipt", userAuth, downloadReceiptPDF);
 
 // PROFESSOR ROUTES
 router.get("/", professorAuth, getApplications);

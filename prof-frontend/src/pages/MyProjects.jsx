@@ -4,6 +4,7 @@ import Sidebar from "../components/Sidebar";
 
 function MyProjects() {
   const [projects, setProjects] = useState([]);
+  const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingProject, setEditingProject] = useState(null);
 
@@ -23,8 +24,12 @@ function MyProjects() {
 
   const fetchProjects = async () => {
     try {
-      const res = await API.get("/projects/professor");
-      setProjects(res.data);
+      const [projRes, appRes] = await Promise.all([
+        API.get("/projects/professor"),
+        API.get("/applications")
+      ]);
+      setProjects(projRes.data);
+      setApplications(appRes.data);
     } catch (err) {
       console.error(err);
     } finally {
@@ -120,8 +125,15 @@ function MyProjects() {
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-6">
-              {projects.map((project) => (
-                <div key={project._id} className="glass-card p-6 border border-slate-200 shadow-sm relative group">
+              {projects.map((project) => {
+                const projectApps = applications.filter(a => a.project?._id === project._id);
+                const appCount = projectApps.length;
+                const pendingCount = projectApps.filter(a => a.status === "Pending").length;
+                const qualifiedCount = projectApps.filter(a => a.status === "Qualified").length;
+                const rejectedCount = projectApps.filter(a => a.status === "Rejected").length;
+
+                return (
+                  <div key={project._id} className="glass-card p-6 border border-slate-200 shadow-sm relative group">
                   {editingProject === project._id ? (
                     <form onSubmit={(e) => handleUpdate(e, project._id)} className="space-y-4">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -197,14 +209,35 @@ function MyProjects() {
                           </button>
                         </div>
                       </div>
-                      <div className="text-sm text-slate-600 mb-4">
-                        <p><strong>Deadline:</strong> {new Date(project.deadline).toLocaleDateString()}</p>
-                        <p className="mt-1"><strong>Required Docs:</strong> {project.requiredDocuments.join(', ').replace(/_/g, " ")}</p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-slate-600 mb-4">
+                        <div>
+                          <p><strong>Deadline:</strong> {new Date(project.deadline).toLocaleDateString()}</p>
+                          <p className="mt-1"><strong>Required Docs:</strong> {project.requiredDocuments.join(', ').replace(/_/g, " ")}</p>
+                        </div>
+                        <div className="bg-slate-100/70 rounded-xl p-3 border border-slate-200/50 flex flex-wrap gap-x-6 gap-y-2">
+                          <div>
+                            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Applications</span>
+                            <p className="text-base font-extrabold text-slate-800">{appCount}</p>
+                          </div>
+                          <div>
+                            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Pending</span>
+                            <p className="text-base font-extrabold text-amber-600">{pendingCount}</p>
+                          </div>
+                          <div>
+                            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Qualified</span>
+                            <p className="text-base font-extrabold text-emerald-600">{qualifiedCount}</p>
+                          </div>
+                          <div>
+                            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Rejected</span>
+                            <p className="text-base font-extrabold text-rose-600">{rejectedCount}</p>
+                          </div>
+                        </div>
                       </div>
                     </>
                   )}
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </main>

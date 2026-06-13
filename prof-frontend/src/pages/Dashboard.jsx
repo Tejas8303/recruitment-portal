@@ -1,7 +1,37 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
+import API from "../api/axios";
 
 function Dashboard() {
+  const [projects, setProjects] = useState([]);
+  const [applications, setApplications] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [projRes, appRes] = await Promise.all([
+          API.get("/projects/professor"),
+          API.get("/applications")
+        ]);
+        setProjects(projRes.data);
+        setApplications(appRes.data);
+      } catch (err) {
+        console.error("Failed to fetch dashboard data", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const totalProjects = projects.length;
+  const totalApps = applications.length;
+  const pendingApps = applications.filter(a => a.status === "Pending").length;
+  const qualifiedApps = applications.filter(a => a.status === "Qualified").length;
+  const rejectedApps = applications.filter(a => a.status === "Rejected").length;
+
   return (
     <div className="flex min-h-screen bg-slate-50">
       <Sidebar />
@@ -21,6 +51,66 @@ function Dashboard() {
             <p className="text-slate-500 text-lg mb-8">
               Welcome back. Here is a quick overview of your recruitment portal.
             </p>
+
+            {loading ? (
+              <div className="flex items-center justify-center p-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-emerald-500 mr-3"></div>
+                <p className="text-slate-500 font-medium">Loading statistics...</p>
+              </div>
+            ) : (
+              /* Analytics Cards */
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 mb-12">
+                <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col justify-between">
+                  <div>
+                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Projects</span>
+                    <h3 className="text-3xl font-extrabold text-slate-800 mt-2">{totalProjects}</h3>
+                  </div>
+                  <div className="mt-4 text-emerald-600 text-sm font-semibold flex items-center gap-1">
+                    Active projects
+                  </div>
+                </div>
+
+                <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col justify-between">
+                  <div>
+                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Apps</span>
+                    <h3 className="text-3xl font-extrabold text-slate-800 mt-2">{totalApps}</h3>
+                  </div>
+                  <div className="mt-4 text-indigo-600 text-sm font-semibold flex items-center gap-1">
+                    Received
+                  </div>
+                </div>
+
+                <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col justify-between">
+                  <div>
+                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Pending</span>
+                    <h3 className="text-3xl font-extrabold text-amber-600 mt-2">{pendingApps}</h3>
+                  </div>
+                  <div className="mt-4 text-amber-500 text-sm font-semibold flex items-center gap-1">
+                    Awaiting review
+                  </div>
+                </div>
+
+                <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col justify-between">
+                  <div>
+                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Qualified</span>
+                    <h3 className="text-3xl font-extrabold text-emerald-600 mt-2">{qualifiedApps}</h3>
+                  </div>
+                  <div className="mt-4 text-emerald-500 text-sm font-semibold flex items-center gap-1">
+                    Shortlisted
+                  </div>
+                </div>
+
+                <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col justify-between">
+                  <div>
+                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Rejected</span>
+                    <h3 className="text-3xl font-extrabold text-rose-600 mt-2">{rejectedApps}</h3>
+                  </div>
+                  <div className="mt-4 text-rose-500 text-sm font-semibold flex items-center gap-1">
+                    Not shortlisted
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">

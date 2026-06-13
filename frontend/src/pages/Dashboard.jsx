@@ -92,6 +92,83 @@ function Dashboard() {
         </div>
       </div>
 
+      {/* APPLICATION TRACKING SECTION */}
+      {applications.length > 0 && (
+        <div className="w-full px-4 sm:px-8 lg:px-12 pt-8">
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8">
+            <h2 className="text-xl font-bold text-slate-800 mb-1 flex items-center gap-2">
+              <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 00-2 2h10a2 2 0 002-2v-1M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+              </svg>
+              Application Tracking
+            </h2>
+            <p className="text-sm text-slate-500 mb-6">Track the status of your submitted applications and download receipts.</p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {applications.map((app) => {
+                const projectCode = app.project?.projectCode || "N/A";
+                const projectTitle = app.project?.projectTitle || "N/A";
+                const formattedId = `${projectCode}-${String(app.serialNumber || 1).padStart(3, '0')}`;
+                
+                const downloadReceipt = async (appId, code) => {
+                  try {
+                    const response = await API.get(`/applications/${appId}/receipt`, {
+                      responseType: "blob"
+                    });
+                    const url = window.URL.createObjectURL(new Blob([response.data]));
+                    const link = document.createElement("a");
+                    link.href = url;
+                    link.setAttribute("download", `receipt_${code}.pdf`);
+                    document.body.appendChild(link);
+                    link.click();
+                    link.remove();
+                  } catch (error) {
+                    console.error("Failed to download receipt", error);
+                    alert("Could not download receipt. Please try again.");
+                  }
+                };
+
+                return (
+                  <div key={app._id} className="bg-slate-50 border border-slate-200/80 rounded-2xl p-5 hover:shadow-md transition-shadow">
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">
+                          {projectCode}
+                        </span>
+                        <h3 className="text-sm font-bold text-slate-800 mt-2 line-clamp-1">
+                          {projectTitle}
+                        </h3>
+                        <p className="text-xs text-slate-400 mt-1 font-medium">ID: {formattedId}</p>
+                      </div>
+                      
+                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border ${
+                        app.status === "Qualified"
+                          ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                          : app.status === "Rejected"
+                            ? "bg-rose-50 text-rose-700 border-rose-200"
+                            : "bg-amber-50 text-amber-700 border-amber-200"
+                      }`}>
+                        {app.status || "Pending"}
+                      </span>
+                    </div>
+                    
+                    <button
+                      onClick={() => downloadReceipt(app._id, projectCode)}
+                      className="w-full mt-4 flex items-center justify-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 font-semibold rounded-xl text-sm transition-colors shadow-sm cursor-pointer"
+                    >
+                      <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      Download Receipt
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* MAIN CONTENT */}
       <main className="flex-1 w-full px-4 sm:px-8 lg:px-12 py-10">
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
@@ -108,7 +185,7 @@ function Dashboard() {
           <div className="divide-y divide-slate-100">
             {projects.map((project) => {
               const app = applications.find(
-                (a) => a.project.toString() === project._id
+                (a) => (a.project?._id || a.project || "").toString() === project._id
               );
               const isClosed = new Date(project.deadline) < new Date();
               const isApplied = !!app;
