@@ -288,7 +288,7 @@ exports.downloadReceiptPDF = async (req, res) => {
     drawRow("Candidate Email:", app.student?.email || "N/A");
     drawRow("Project Code:", app.project?.projectCode || "N/A");
     drawRow("Project Title:", app.project?.projectTitle || "N/A");
-    drawRow("Submission Time:", new Date(app.submittedAt || app.createdAt).toLocaleString());
+    drawRow("Submission Time:", new Date(app.submittedAt || app.createdAt).toLocaleString("en-US", { timeZone: "Asia/Kolkata" }) + " (IST)");
     drawRow("Current Status:", app.status || "Pending");
 
     doc.moveDown(3);
